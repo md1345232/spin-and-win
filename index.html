@@ -1,0 +1,300 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Spin & Win</title>
+<style>
+  body {
+    font-family: "Poppins", sans-serif;
+    background: radial-gradient(circle at center, #0f2027, #203a43, #2c5364);
+    color: white;
+    height: 100vh;
+    margin: 0;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    overflow: hidden;
+  }
+  .top-bar {
+    position: absolute;
+    top: 20px;
+    width: 90%;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+  #score-box {
+    background: rgba(255, 255, 255, 0.1);
+    border: 2px solid #00ffcc;
+    border-radius: 10px;
+    padding: 10px 20px;
+    font-size: 1.2rem;
+    box-shadow: 0 0 10px #00ffcc;
+  }
+  #withdraw-btn {
+    background: linear-gradient(90deg, #ffcc00, #ff9900);
+    color: black;
+    font-weight: bold;
+    border: none;
+    border-radius: 10px;
+    padding: 10px 20px;
+    font-size: 1rem;
+    cursor: pointer;
+    transition: 0.3s;
+    box-shadow: 0 0 10px #ffcc00;
+  }
+  #withdraw-btn:hover {
+    transform: scale(1.05);
+    box-shadow: 0 0 20px #ffcc00;
+  }
+  .wheel-container {
+    position: relative;
+    top: 100px;
+  }
+  .wheel {
+    width: 300px;
+    height: 300px;
+    border-radius: 50%;
+    border: 8px solid #fff;
+    position: relative;
+    overflow: hidden;
+    transition: transform 4s ease-out;
+    box-shadow: 0 0 40px rgba(255, 255, 255, 0.2);
+  }
+  .slice {
+    position: absolute;
+    width: 50%;
+    height: 50%;
+    transform-origin: 100% 100%;
+    clip-path: polygon(0 0, 100% 0, 100% 100%);
+  }
+  .slice:nth-child(1){background:#ff4b5c;transform:rotate(0deg);}
+  .slice:nth-child(2){background:#ffc93c;transform:rotate(72deg);}
+  .slice:nth-child(3){background:#1dd3b0;transform:rotate(144deg);}
+  .slice:nth-child(4){background:#007bff;transform:rotate(216deg);}
+  .slice:nth-child(5){background:#9b59b6;transform:rotate(288deg);}
+  .slice span {
+    position: absolute;
+    top: 70%;
+    left: 70%;
+    transform: translate(-50%, -50%) rotate(36deg);
+    color: #fff;
+    font-size: 1.5rem;
+    font-weight: bold;
+  }
+  #pointer {
+    width: 0;
+    height: 0;
+    border-left: 15px solid transparent;
+    border-right: 15px solid transparent;
+    border-bottom: 30px solid #00ffcc;
+    position: absolute;
+    top: -40px;
+    left: 50%;
+    transform: translateX(-50%);
+  }
+  #spin-btn {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    background: linear-gradient(45deg, #00ffcc, #007bff);
+    color: white;
+    font-size: 1.1rem;
+    font-weight: bold;
+    border: none;
+    border-radius: 50%;
+    width: 80px;
+    height: 80px;
+    cursor: pointer;
+    box-shadow: 0 0 25px rgba(0,255,204,0.5);
+    transition: 0.3s;
+  }
+  #spin-btn:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+  }
+  #popup, #withdraw-popup {
+    display: none;
+    position: fixed;
+    top: 0; left: 0;
+    width: 100%; height: 100%;
+    backdrop-filter: blur(6px);
+    background: rgba(0,0,0,0.7);
+    justify-content: center;
+    align-items: center;
+  }
+  .popup-content {
+    background: linear-gradient(145deg, #141e30, #243b55);
+    border: 2px solid #00ffcc;
+    border-radius: 15px;
+    box-shadow: 0 0 25px rgba(0,255,204,0.3);
+    padding: 30px;
+    text-align: center;
+    width: 300px;
+    animation: popIn 0.4s ease;
+  }
+  @keyframes popIn {
+    from { transform: scale(0.8); opacity: 0; }
+    to { transform: scale(1); opacity: 1; }
+  }
+  .popup-content h2 {
+    color: #00ffcc;
+    margin-bottom: 15px;
+  }
+  .claim-btn, .close-btn {
+    margin-top: 15px;
+    padding: 10px 25px;
+    border: none;
+    background: #00ffcc;
+    color: black;
+    border-radius: 10px;
+    font-weight: bold;
+    cursor: pointer;
+  }
+  .popup-option {
+    background: rgba(255,255,255,0.1);
+    border: 2px solid #00ffcc;
+    border-radius: 12px;
+    padding: 10px;
+    margin: 10px 0;
+    font-size: 1rem;
+    transition: 0.3s;
+  }
+  .popup-option.active {
+    background: #00ffcc;
+    color: black;
+    box-shadow: 0 0 15px #00ffcc;
+  }
+  /* Banner ad */
+  #banner-ad {
+    position: fixed;
+    bottom: 0;
+    width: 728px;
+    height: 90px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+  }
+</style>
+</head>
+<body>
+
+<div class="top-bar">
+  <div id="score-box">Total Points: <span id="score">0</span></div>
+  <button id="withdraw-btn">💰 Withdraw</button>
+</div>
+
+<div class="wheel-container">
+  <div id="pointer"></div>
+  <div class="wheel" id="wheel">
+    <div class="slice"><span>10</span></div>
+    <div class="slice"><span>0</span></div>
+    <div class="slice"><span>0</span></div>
+    <div class="slice"><span>2</span></div>
+    <div class="slice"><span>3</span></div>
+  </div>
+  <button id="spin-btn">SPIN</button>
+</div>
+
+<!-- Result Popup -->
+<div id="popup">
+  <div class="popup-content">
+    <h2 id="result-text"></h2>
+    <button class="claim-btn" id="claim">Claim</button>
+  </div>
+</div>
+
+<!-- Withdraw Popup -->
+<div id="withdraw-popup">
+  <div class="popup-content">
+    <h2>💸 Withdraw Options</h2>
+    <div class="popup-option" id="opt1">300 Points = 5 RM</div>
+    <div class="popup-option" id="opt2">1000 Points = 40 RM</div>
+    <div class="popup-option" id="opt3">3000 Points = 100 RM</div>
+    <button class="close-btn">Close</button>
+  </div>
+</div>
+
+<!-- Banner Ad -->
+<div id="banner-ad">
+  <script type="text/javascript">
+    atOptions = {
+      'key' : '20a7070313d9cd198a250042623588d9',
+      'format' : 'iframe',
+      'height' : 90,
+      'width' : 728,
+      'params' : {}
+    };
+  </script>
+  <script type="text/javascript" src="//www.highperformanceformat.com/20a7070313d9cd198a250042623588d9/invoke.js"></script>
+</div>
+
+<script>
+const wheel = document.getElementById("wheel");
+const spinBtn = document.getElementById("spin-btn");
+const scoreEl = document.getElementById("score");
+const popup = document.getElementById("popup");
+const withdrawBtn = document.getElementById("withdraw-btn");
+const withdrawPopup = document.getElementById("withdraw-popup");
+const closeBtn = document.querySelector(".close-btn");
+const resultText = document.getElementById("result-text");
+const claimBtn = document.getElementById("claim");
+
+const points = [10,0,0,2,3];
+let total = parseInt(localStorage.getItem("totalScore")) || 0;
+let current = 0;
+let spinning = false;
+scoreEl.textContent = total;
+
+function updateWithdrawUI() {
+  document.querySelectorAll(".popup-option").forEach(opt => opt.classList.remove("active"));
+  if (total >= 3000) document.getElementById("opt3").classList.add("active");
+  else if (total >= 1000) document.getElementById("opt2").classList.add("active");
+  else if (total >= 300) document.getElementById("opt1").classList.add("active");
+}
+
+spinBtn.onclick = () => {
+  if (spinning) return;
+  spinning = true;
+  spinBtn.disabled = true;
+  const deg = 1440 + Math.random() * 1080;
+  wheel.style.transform = `rotate(${deg}deg)`;
+
+  setTimeout(() => {
+    const finalDeg = deg % 360;
+    const section = Math.floor(finalDeg / (360 / 5));
+    current = points[(5 - section) % 5];
+    resultText.textContent = `🎯 You got ${current} points!`;
+    popup.style.display = "flex";
+    spinning = false;
+    spinBtn.disabled = false;
+  }, 4000);
+};
+
+claimBtn.onclick = () => {
+  total += current;
+  localStorage.setItem("totalScore", total);
+  scoreEl.textContent = total;
+  popup.style.display = "none";
+  current = 0;
+
+  // Popup Ad Script
+  const adScript = document.createElement("script");
+  adScript.src = "//pl28014877.effectivegatecpm.com/32/b2/0c/32b20cfa54d2414b0430af7dcf817ec6.js";
+  adScript.type = "text/javascript";
+  document.body.appendChild(adScript);
+};
+
+withdrawBtn.onclick = () => {
+  withdrawPopup.style.display = "flex";
+  updateWithdrawUI();
+};
+
+closeBtn.onclick = () => {
+  withdrawPopup.style.display = "none";
+};
+</script>
+</body>
+</html>
